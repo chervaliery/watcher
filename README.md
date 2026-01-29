@@ -1,5 +1,10 @@
 # Web Application Monitor
 
+[![Python 3.10 | 3.11](https://img.shields.io/badge/python-3.10%20%7C%203.11-blue)](https://www.python.org/)
+[![Lint (pylint)](https://github.com/chervaliery/watcher/actions/workflows/lint.yml/badge.svg)](https://github.com/chervaliery/watcher/actions/workflows/lint.yml)
+[![codecov](https://codecov.io/gh/chervaliery/watcher/branch/main/graph/badge.svg)](https://codecov.io/gh/chervaliery/watcher)
+[![CodeQL](https://github.com/chervaliery/watcher/actions/workflows/codeql.yml/badge.svg)](https://github.com/chervaliery/watcher/actions/workflows/codeql.yml)
+
 Monitor personal web applications (different hostnames, optional client certificates) with regular HTTP health checks and a dashboard.
 
 - **Backend**: Django + MariaDB
@@ -33,23 +38,23 @@ FLUSH PRIVILEGES;
 
 Configure via environment (or leave defaults for local dev):
 
-| Variable              | Description                                                    | Default                  |
-| --------------------- | -------------------------------------------------------------- | ------------------------ |
-| `USE_MARIADB`         | Set to a non-empty value to use MariaDB instead of SQLite      | (unset → SQLite)         |
-| `MARIADB_NAME`        | Database name (when `USE_MARIADB` is set)                      | `watcher`                |
-| `MARIADB_USER`        | Database user                                                  | `watcher`                |
-| `MARIADB_PASSWORD`    | Database password                                              | `watcher`                |
-| `MARIADB_HOST`        | Database host                                                  | `localhost`              |
-| `MARIADB_PORT`        | Database port                                                  | `3306`                   |
+| Variable              | Description                                                    | Default                          |
+| --------------------- | -------------------------------------------------------------- | -------------------------------- |
+| `USE_MARIADB`         | Set to a non-empty value to use MariaDB instead of SQLite      | (unset → SQLite)                 |
+| `MARIADB_NAME`        | Database name (when `USE_MARIADB` is set)                      | `watcher`                        |
+| `MARIADB_USER`        | Database user                                                  | `watcher`                        |
+| `MARIADB_PASSWORD`    | Database password                                              | `watcher`                        |
+| `MARIADB_HOST`        | Database host                                                  | `localhost`                      |
+| `MARIADB_PORT`        | Database port                                                  | `3306`                           |
 | `DJANGO_SECRET_KEY`   | Django secret                                                  | (dev default; set in production) |
-| `DJANGO_DEBUG`        | Debug mode                                                     | `1`                      |
-| `DJANGO_ALLOWED_HOSTS`| Comma-separated hosts                                          | `localhost,127.0.0.1`    |
-| `CORS_ALLOWED_ORIGINS`| Allowed CORS origins                                           | `http://localhost:8000`  |
-| `ALERT_THRESHOLD`     | Consecutive failures/successes before sending an email         | `5`                      |
-| `MAILJET_API_KEY`     | Mailjet API key (optional; if unset, no alert emails)          | (unset)                  |
-| `MAILJET_SECRET`      | Mailjet API secret                                             | (unset)                  |
-| `MAILJET_FROM_EMAIL`  | Sender email for alerts                                        | (unset)                  |
-| `MAILJET_ALERT_TO`    | Comma-separated recipient email(s) for alerts                  | (unset)                  |
+| `DJANGO_DEBUG`        | Debug mode                                                     | `1`                              |
+| `DJANGO_ALLOWED_HOSTS`| Comma-separated hosts                                          | `localhost,127.0.0.1`            |
+| `CORS_ALLOWED_ORIGINS`| Allowed CORS origins                                           | `http://localhost:8000`          |
+| `ALERT_THRESHOLD`     | Consecutive failures/successes before sending an email         | `5`                              |
+| `MAILJET_API_KEY`     | Mailjet API key (optional; if unset, no alert emails)          | (unset)                          |
+| `MAILJET_SECRET`      | Mailjet API secret                                             | (unset)                          |
+| `MAILJET_FROM_EMAIL`  | Sender email for alerts                                        | (unset)                          |
+| `MAILJET_ALERT_TO`    | Comma-separated recipient email(s) for alerts                  | (unset)                          |
 
 Example (SQLite, dev):
 

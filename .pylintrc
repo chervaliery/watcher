@@ -1,0 +1,19 @@
+[MASTER]
+load-plugins=pylint_django
+ignore=migrations,__pycache__,.venv
+jobs=0
+
+[MESSAGES CONTROL]
+disable=missing-module-docstring,missing-class-docstring,missing-function-docstring
+
+[FORMAT]
+max-line-length=120
+
+[BASIC]
+good-names=i,j,id,_,pk,url
+
+[PYLINT_DJANGO]
+django-settings-module=watcher.settings
+
+[TYPECHECK]
+ignored-modules=requests_pkcs12
