@@ -43,16 +43,13 @@ jobs:
           DJANGO_DEBUG: "0"
 
       - name: Run tests with coverage
-        run: |
-          coverage run --source=monitor,watcher manage.py test
-          coverage report
-          coverage xml
+        run: pytest --cov=monitor --cov=watcher --cov-branch --cov-report=xml
         env:
           DJANGO_SECRET_KEY: test-secret-for-ci
           DJANGO_DEBUG: "0"
+          DJANGO_SETTINGS_MODULE: watcher.settings
 
-      - name: Upload to Codecov
-        uses: codecov/codecov-action@v4
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
         with:
-          file: coverage.xml
-          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}

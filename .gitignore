@@ -39,6 +39,8 @@ media/
 .env.local
 .env.*.local
 *.pem
+*.p12
+*.crt
 
 # IDE and OS
 .idea/
