@@ -1,0 +1,65 @@
+<h1 class="page-title">Manage applications</h1>
+
+<div class="form-panel">
+  <h2 style="margin-top:0;">{{ vm.editId ? 'Edit application' : 'Add application' }}</h2>
+  <form name="appForm" ng-submit="vm.save()">
+    <div class="form-group">
+      <label>Name</label>
+      <input type="text" ng-model="vm.form.name" placeholder="Display name (optional)">
+    </div>
+    <div class="form-group">
+      <label>Base URL *</label>
+      <input type="url" ng-model="vm.form.base_url" placeholder="https://app.example.com" required>
+    </div>
+    <div class="form-group">
+      <label>Hostname (optional)</label>
+      <input type="text" ng-model="vm.form.hostname" placeholder="For display or Host header">
+    </div>
+    <div class="form-group">
+      <label>Check interval (seconds)</label>
+      <input type="number" ng-model="vm.form.check_interval_seconds" min="10" step="1">
+    </div>
+    <div class="form-group">
+      <label>Client P12 path (optional)</label>
+      <input type="text" ng-model="vm.form.client_p12_path" placeholder="/path/to/client.p12">
+    </div>
+    <div class="form-group">
+      <label>Client P12 password (optional)</label>
+      <input type="password" ng-model="vm.form.client_p12_password" placeholder="Leave blank if unencrypted">
+    </div>
+    <div class="form-group">
+      <label>CA bundle path (optional)</label>
+      <input type="text" ng-model="vm.form.ca_bundle_path" placeholder="/path/to/ca.pem">
+    </div>
+    <div class="form-group form-group--toggle">
+      <label>Active</label>
+      <label class="toggle-switch">
+        <input type="checkbox" ng-model="vm.form.is_active" class="toggle-switch__input">
+        <span class="toggle-switch__slider"></span>
+      </label>
+    </div>
+    <div ng-if="vm.formError" class="error-msg">{{ vm.formError }}</div>
+    <div ng-if="vm.formSuccess" class="success-msg">{{ vm.formSuccess }}</div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">{{ vm.editId ? 'Save' : 'Create' }}</button>
+      <button type="button" class="btn btn-secondary" ng-if="vm.editId" ng-click="vm.cancelEdit()">Cancel</button>
+    </div>
+  </form>
+</div>
+
+<div ng-if="vm.loading" class="loading">Loading...</div>
+<div ng-if="vm.error" class="error-msg">{{ vm.error }}</div>
+<ul class="app-list" ng-if="!vm.loading && vm.apps.length">
+  <li ng-repeat="app in vm.apps">
+    <div class="info">
+      <span class="name">{{ app.name || app.base_url }}</span>
+      <span class="url">{{ app.base_url }}</span>
+    </div>
+    <div class="actions">
+      <a ng-href="#/applications/{{ app.id }}/history" class="btn btn-secondary btn-sm">History</a>
+      <button type="button" class="btn btn-secondary btn-sm" ng-click="vm.startEdit(app)">Edit</button>
+      <button type="button" class="btn btn-danger btn-sm" ng-click="vm.remove(app)">Delete</button>
+    </div>
+  </li>
+</ul>
+<p ng-if="!vm.loading && !vm.apps.length">No applications yet. Add one above.</p>

@@ -1,0 +1,31 @@
+<a href="#/applications" class="back-link">← Back to applications</a>
+<h1 class="page-title">Check history: {{ vm.appName }}</h1>
+
+<div ng-if="vm.loading" class="loading">Loading...</div>
+<div ng-if="!vm.loading">
+  <table class="history-table">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Status</th>
+        <th>Code</th>
+        <th>Response time</th>
+        <th>Error</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="r in vm.results">
+        <td>{{ r.checked_at_display }}</td>
+        <td><span class="status" ng-class="r.success ? 'up' : 'down'">{{ r.success ? 'Up' : 'Down' }}</span></td>
+        <td>{{ r.status_code || '—' }}</td>
+        <td>{{ r.response_time_ms != null ? r.response_time_ms + ' ms' : '—' }}</td>
+        <td>{{ r.error_message || '—' }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="pagination">
+    <button type="button" class="btn btn-secondary btn-sm" ng-click="vm.prevPage()" ng-disabled="vm.page <= 1">Previous</button>
+    <span>Page {{ vm.page }} ({{ vm.results.length }} of {{ vm.total }})</span>
+    <button type="button" class="btn btn-secondary btn-sm" ng-click="vm.nextPage()" ng-disabled="(vm.page * vm.pageSize) >= vm.total">Next</button>
+  </div>
+</div>

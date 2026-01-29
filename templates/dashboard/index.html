@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="watcherApp">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Web Application Monitor</title>
+  <base href="/dashboard/">
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'dashboard/styles.css' %}">
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+  <script src="{% static 'dashboard/app.js' %}"></script>
+</head>
+{% verbatim %}
+<body ng-controller="ThemeController as theme" ng-class="{'theme-dark': theme.isDark, 'theme-light': !theme.isDark}">
+  <div class="app-header">
+    <h1>Web Application Monitor</h1>
+    <div class="app-header__right">
+      <nav>
+        <a href="#/">Dashboard</a>
+        <a href="#/applications">Manage applications</a>
+      </nav>
+      <label class="theme-toggle" title="{{ theme.isDark ? 'Switch to light mode' : 'Switch to dark mode' }}">
+        <input type="checkbox" ng-checked="theme.isDark" ng-click="theme.toggle(); $event.preventDefault()" class="theme-toggle__input" aria-label="Dark mode">
+        <span class="theme-toggle__slider"></span>
+        <span class="theme-toggle__label">{{ theme.isDark ? 'Dark' : 'Light' }}</span>
+      </label>
+    </div>
+  </div>
+  <main class="app-main" ng-view></main>
+</body>
+{% endverbatim %}
+</html>

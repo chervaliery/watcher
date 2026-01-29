@@ -1,0 +1,70 @@
+<div ng-if="vm.loading" class="loading">Loading dashboard...</div>
+<div ng-if="vm.error" class="error-msg">{{ vm.error }}</div>
+<div ng-if="!vm.loading && !vm.error">
+  <div class="dashboard-cards">
+    <div class="card" ng-repeat="item in vm.items | filter:vm.isActive">
+      <h2>{{ item.application.name || item.application.base_url }}</h2>
+      <div class="meta">
+        <span ng-if="item.application.hostname">{{ item.application.hostname }} — </span>
+        <a ng-href="{{ item.application.base_url }}" target="_blank" rel="noopener">{{ item.application.base_url }}</a>
+      </div>
+      <div ng-if="item.last_check">
+        <span class="status" ng-class="{
+          'up': item.last_check.success,
+          'down': !item.last_check.success,
+          'unknown': false
+        }">{{ item.last_check.success ? 'Up' : 'Down' }}</span>
+        <div class="last-check">
+          <span ng-if="item.last_check.response_time_ms != null" class="response-time">{{ item.last_check.response_time_ms }} ms</span>
+          <span>{{ item.last_check.checked_at_display }}</span>
+        </div>
+        <div ng-if="item.last_check.error_message" class="error-msg">{{ item.last_check.error_message }}</div>
+      </div>
+      <div ng-if="!item.last_check" class="status unknown">No checks yet</div>
+      <div ng-if="item.success_rate_24h != null" class="recent-list">
+        Last 24h: {{ item.success_rate_24h }}% success ({{ item.checks_24h }} checks)
+      </div>
+      <div ng-if="item.recent_checks && item.recent_checks.length" class="recent-list">
+        <span ng-repeat="r in item.recent_checks">
+          <span ng-class="r.success ? 'status up' : 'status down'" style="padding:0 2px;">{{ r.success ? '✓' : '✗' }}</span>
+        </span>
+      </div>
+      <a ng-href="#/applications/{{ item.application.id }}/history" class="btn btn-secondary btn-sm" style="margin-top:0.5rem;">History</a>
+    </div>
+  </div>
+  <details class="dashboard-spoiler" ng-if="(vm.items | filter:vm.isInactive).length">
+    <summary class="dashboard-spoiler__summary">Inactive applications ({{ (vm.items | filter:vm.isInactive).length }})</summary>
+    <div class="dashboard-cards dashboard-spoiler__content">
+      <div class="card" ng-repeat="item in vm.items | filter:vm.isInactive">
+        <h2>{{ item.application.name || item.application.base_url }}</h2>
+        <div class="meta">
+          <span ng-if="item.application.hostname">{{ item.application.hostname }} — </span>
+          <a ng-href="{{ item.application.base_url }}" target="_blank" rel="noopener">{{ item.application.base_url }}</a>
+        </div>
+        <div ng-if="item.last_check">
+          <span class="status" ng-class="{
+            'up': item.last_check.success,
+            'down': !item.last_check.success,
+            'unknown': false
+          }">{{ item.last_check.success ? 'Up' : 'Down' }}</span>
+          <div class="last-check">
+            <span ng-if="item.last_check.response_time_ms != null" class="response-time">{{ item.last_check.response_time_ms }} ms</span>
+            <span>{{ item.last_check.checked_at_display }}</span>
+          </div>
+          <div ng-if="item.last_check.error_message" class="error-msg">{{ item.last_check.error_message }}</div>
+        </div>
+        <div ng-if="!item.last_check" class="status unknown">No checks yet</div>
+        <div ng-if="item.success_rate_24h != null" class="recent-list">
+          Last 24h: {{ item.success_rate_24h }}% success ({{ item.checks_24h }} checks)
+        </div>
+        <div ng-if="item.recent_checks && item.recent_checks.length" class="recent-list">
+          <span ng-repeat="r in item.recent_checks">
+            <span ng-class="r.success ? 'status up' : 'status down'" style="padding:0 2px;">{{ r.success ? '✓' : '✗' }}</span>
+          </span>
+        </div>
+        <a ng-href="#/applications/{{ item.application.id }}/history" class="btn btn-secondary btn-sm" style="margin-top:0.5rem;">History</a>
+      </div>
+    </div>
+  </details>
+</div>
+<p class="refresh-note" ng-if="!vm.loading">Dashboard refreshes every 45 seconds.</p>
