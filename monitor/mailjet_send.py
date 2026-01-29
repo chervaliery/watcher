@@ -7,6 +7,8 @@ import logging
 
 import requests
 
+from django.conf import settings
+
 logger = logging.getLogger(__name__)
 
 MAILJET_SEND_URL = "https://api.mailjet.com/v3.1/send"
@@ -24,8 +26,6 @@ def send_alert_email(subject, body_plain, recipients):
     Send a plain-text email via Mailjet. If Mailjet is not configured
     (missing API key, secret, from email, or recipients), log and return without sending.
     """
-    from django.conf import settings
-
     api_key = getattr(settings, "MAILJET_API_KEY", "") or ""
     secret = getattr(settings, "MAILJET_SECRET", "") or ""
     from_email = getattr(settings, "MAILJET_FROM_EMAIL", "") or ""

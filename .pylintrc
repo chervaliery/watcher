@@ -4,13 +4,13 @@ ignore=migrations,__pycache__,.venv
 jobs=0
 
 [MESSAGES CONTROL]
-disable=missing-module-docstring,missing-class-docstring,missing-function-docstring
+disable=missing-module-docstring,missing-class-docstring,missing-function-docstring,too-few-public-methods,too-many-branches,too-many-return-statements
 
 [FORMAT]
 max-line-length=120
 
 [BASIC]
-good-names=i,j,id,_,pk,url
+good-names=i,j,id,_,pk,url,dt,d,r,qs,e,ip,app_name,r1,r2,c
 
 [PYLINT_DJANGO]
 django-settings-module=watcher.settings

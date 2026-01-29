@@ -38,7 +38,7 @@ def _is_url_allowed(url: str) -> bool:
     """
     try:
         parsed = urllib.parse.urlparse(url)
-    except Exception:
+    except (ValueError, TypeError):
         return False
     if not parsed.scheme or not parsed.netloc:
         return False

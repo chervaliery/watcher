@@ -35,7 +35,7 @@ class WatchedApplication(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return self.name or self.base_url
+        return str(self.name or self.base_url)
 
     def get_expected_status_codes(self):
         if isinstance(self.expected_status_codes, list):

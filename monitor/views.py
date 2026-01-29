@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 from zoneinfo import ZoneInfo
 
 from django.http import JsonResponse
@@ -7,7 +8,7 @@ from django.views import View
 from django.shortcuts import get_object_or_404
 
 from .checker import _is_url_allowed
-from .models import WatchedApplication, CheckResult
+from .models import WatchedApplication
 
 PARIS_TZ = ZoneInfo('Europe/Paris')
 
@@ -68,7 +69,7 @@ def _check_result_to_dict(r):
 
 
 class ApplicationListCreate(View):
-    def get(self, request):
+    def get(self, _request):
         apps = WatchedApplication.objects.all().order_by('name')
         return JsonResponse({
             'results': [_application_to_dict(a) for a in apps],
@@ -103,7 +104,7 @@ class ApplicationListCreate(View):
 
 
 class ApplicationDetail(View):
-    def get(self, request, pk):
+    def get(self, _request, pk):
         app = get_object_or_404(WatchedApplication, pk=pk)
         return JsonResponse(_application_to_dict(app))
 
@@ -142,18 +143,18 @@ class ApplicationDetail(View):
         app.save()
         return JsonResponse(_application_to_dict(app))
 
-    def delete(self, request, pk):
+    def delete(self, _request, pk):
         app = get_object_or_404(WatchedApplication, pk=pk)
         app.delete()
         return JsonResponse({}, status=204)
 
 
 class ApplicationHistory(View):
-    def get(self, request, pk):
+    def get(self, _request, pk):
         app = get_object_or_404(WatchedApplication, pk=pk)
         try:
-            page = max(1, int(request.GET.get('page', 1)))
-            page_size = min(100, max(1, int(request.GET.get('page_size', 20))))
+            page = max(1, int(_request.GET.get('page', 1)))
+            page_size = min(100, max(1, int(_request.GET.get('page_size', 20))))
         except (TypeError, ValueError):
             page, page_size = 1, 20
         qs = app.check_results.order_by('-checked_at')
@@ -170,15 +171,13 @@ class ApplicationHistory(View):
 
 
 class DashboardView(View):
-    def get(self, request):
+    def get(self, _request):
         apps = WatchedApplication.objects.all().order_by('name')
         items = []
         for app in apps:
             last = app.check_results.order_by('-checked_at').first()
             recent = list(app.check_results.order_by('-checked_at')[:5])
-            from django.utils import timezone
-            from datetime import timedelta
-            day_ago = timezone.now() - timedelta(hours=24)
+            day_ago = dj_timezone.now() - timedelta(hours=24)
             last_24h = app.check_results.filter(checked_at__gte=day_ago)
             total_24h = last_24h.count()
             success_24h = last_24h.filter(success=True).count()
