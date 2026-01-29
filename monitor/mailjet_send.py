@@ -12,6 +12,13 @@ logger = logging.getLogger(__name__)
 MAILJET_SEND_URL = "https://api.mailjet.com/v3.1/send"
 
 
+def _sanitize_log(value):
+    """Replace newlines/carriage returns to prevent log injection."""
+    if value is None:
+        return ""
+    return str(value).replace("\r", " ").replace("\n", " ")
+
+
 def send_alert_email(subject, body_plain, recipients):
     """
     Send a plain-text email via Mailjet. If Mailjet is not configured
@@ -29,7 +36,7 @@ def send_alert_email(subject, body_plain, recipients):
     if not all([api_key, secret, from_email, recipients]):
         logger.info(
             "Mailjet not configured or no recipients; skipping alert email: %s",
-            subject[:50],
+            _sanitize_log(subject)[:50],
         )
         return
 
@@ -58,9 +65,9 @@ def send_alert_email(subject, body_plain, recipients):
             logger.warning(
                 "Mailjet send failed: status=%s body=%s",
                 resp.status_code,
-                resp.text[:200],
+                _sanitize_log(resp.text)[:200],
             )
         else:
-            logger.info("Alert email sent: %s", subject[:50])
+            logger.info("Alert email sent: %s", _sanitize_log(subject)[:50])
     except requests.RequestException as e:
-        logger.warning("Mailjet send error: %s", e)
+        logger.warning("Mailjet send error: %s", _sanitize_log(e))

@@ -3,7 +3,11 @@ HTTP health check logic for WatchedApplication.
 Uses requests with optional client certificate (PEM or P12) and measures response time.
 Evaluates alert threshold and sends Mailjet emails when N consecutive down/up.
 """
+import ipaddress
+import socket
 import time
+import urllib.parse
+
 import requests
 from django.conf import settings
 from django.utils import timezone
@@ -14,12 +18,66 @@ from .mailjet_send import send_alert_email
 
 DEFAULT_TIMEOUT = 10
 
+# Private/internal IP ranges and hostnames that are not allowed for SSRF mitigation
+_PRIVATE_NETWORKS = (
+    ipaddress.ip_network('127.0.0.0/8'),
+    ipaddress.ip_network('10.0.0.0/8'),
+    ipaddress.ip_network('172.16.0.0/12'),
+    ipaddress.ip_network('192.168.0.0/16'),
+    ipaddress.ip_network('169.254.0.0/16'),
+    ipaddress.ip_network('::1/128'),
+    ipaddress.ip_network('fc00::/7'),
+)
+_BLOCKED_HOSTNAMES = frozenset(('localhost', 'localhost.localdomain'))
+
+
+def _is_url_allowed(url: str) -> bool:
+    """
+    Return True if url is allowed for outbound HTTP checks (SSRF mitigation).
+    Allows only http/https; blocks private/internal IPs and blocked hostnames.
+    """
+    try:
+        parsed = urllib.parse.urlparse(url)
+    except Exception:
+        return False
+    if not parsed.scheme or not parsed.netloc:
+        return False
+    if parsed.scheme.lower() not in ('http', 'https'):
+        return False
+    host = parsed.hostname
+    if not host:
+        return False
+    if host.lower() in _BLOCKED_HOSTNAMES:
+        return False
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        try:
+            ip = ipaddress.ip_address(socket.gethostbyname(host))
+        except (OSError, ValueError):
+            return False
+    if ip.is_private or ip.is_loopback or ip.is_link_local:
+        return False
+    for net in _PRIVATE_NETWORKS:
+        if ip in net:
+            return False
+    return True
+
 
 def run_check(app: WatchedApplication) -> CheckResult:
     """
     Perform a single HTTP GET to app.base_url and record the result.
     Uses P12 or PEM client cert and CA bundle from app if configured.
+    Skips request and returns a failed result if base_url is not allowed (SSRF mitigation).
     """
+    if not _is_url_allowed(app.base_url):
+        return CheckResult.objects.create(
+            watched_application=app,
+            status_code=None,
+            response_time_ms=None,
+            success=False,
+            error_message='URL not allowed (scheme or host blocked for security)',
+        )
     verify = app.ca_bundle_path if app.ca_bundle_path else True
     headers = {'Host': app.hostname} if app.hostname else None
     expected = app.get_expected_status_codes()

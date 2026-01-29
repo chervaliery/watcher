@@ -16,7 +16,9 @@
         }
       };
     })
-    .config(function ($routeProvider, $locationProvider) {
+    .config(function ($routeProvider, $locationProvider, $httpProvider) {
+      $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
+      $httpProvider.defaults.xsrfCookieName = 'csrftoken';
       $locationProvider.hashPrefix('');
       $routeProvider
         .when('/', {

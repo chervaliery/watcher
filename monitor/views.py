@@ -4,10 +4,9 @@ from zoneinfo import ZoneInfo
 from django.http import JsonResponse
 from django.utils import timezone as dj_timezone
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 from django.shortcuts import get_object_or_404
 
+from .checker import _is_url_allowed
 from .models import WatchedApplication, CheckResult
 
 PARIS_TZ = ZoneInfo('Europe/Paris')
@@ -68,7 +67,6 @@ def _check_result_to_dict(r):
     }
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class ApplicationListCreate(View):
     def get(self, request):
         apps = WatchedApplication.objects.all().order_by('name')
@@ -85,6 +83,8 @@ class ApplicationListCreate(View):
         base_url = (body.get('base_url') or '').strip()
         if not base_url:
             return JsonResponse({'error': 'base_url is required'}, status=400)
+        if not _is_url_allowed(base_url):
+            return JsonResponse({'error': 'base_url not allowed (scheme or host blocked for security)'}, status=400)
         app = WatchedApplication(
             name=name or base_url,
             base_url=base_url,
@@ -102,7 +102,6 @@ class ApplicationListCreate(View):
         return JsonResponse(_application_to_dict(app), status=201)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class ApplicationDetail(View):
     def get(self, request, pk):
         app = get_object_or_404(WatchedApplication, pk=pk)
@@ -118,6 +117,8 @@ class ApplicationDetail(View):
             app.name = (body['name'] or '').strip() or app.base_url
         if 'base_url' in body:
             url = (body['base_url'] or '').strip()
+            if url and not _is_url_allowed(url):
+                return JsonResponse({'error': 'base_url not allowed (scheme or host blocked for security)'}, status=400)
             if url:
                 app.base_url = url
         if 'hostname' in body:
@@ -147,7 +148,6 @@ class ApplicationDetail(View):
         return JsonResponse({}, status=204)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class ApplicationHistory(View):
     def get(self, request, pk):
         app = get_object_or_404(WatchedApplication, pk=pk)
@@ -169,7 +169,6 @@ class ApplicationHistory(View):
         })
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class DashboardView(View):
     def get(self, request):
         apps = WatchedApplication.objects.all().order_by('name')

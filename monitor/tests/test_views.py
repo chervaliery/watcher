@@ -1,8 +1,17 @@
 import json
+from unittest.mock import patch
+
 from django.test import TestCase, Client
 from django.urls import reverse
 
 from monitor.models import WatchedApplication, CheckResult
+
+
+def _get_csrf_client():
+    """Return a client with CSRF cookie set (GET dashboard first)."""
+    client = Client()
+    client.get('/dashboard/')
+    return client
 
 
 class ApplicationListCreateViewTest(TestCase):
@@ -27,17 +36,33 @@ class ApplicationListCreateViewTest(TestCase):
         self.assertIn('A', names)
         self.assertIn('B', names)
 
-    def test_post_creates_app_201(self):
-        response = self.client.post(
+    @patch('monitor.views._is_url_allowed', return_value=True)
+    def test_post_creates_app_201(self, _mock_allowed):
+        client = _get_csrf_client()
+        response = client.post(
             '/api/applications/',
             data=json.dumps({'base_url': 'https://new.com', 'name': 'New'}),
             content_type='application/json',
+            HTTP_X_CSRFTOKEN=client.cookies['csrftoken'].value,
         )
         self.assertEqual(response.status_code, 201)
         data = response.json()
         self.assertEqual(data['base_url'], 'https://new.com')
         self.assertEqual(data['name'], 'New')
         self.assertEqual(WatchedApplication.objects.count(), 1)
+
+    @patch('monitor.views._is_url_allowed', return_value=False)
+    def test_post_base_url_not_allowed_400(self, _mock_allowed):
+        client = _get_csrf_client()
+        response = client.post(
+            '/api/applications/',
+            data=json.dumps({'base_url': 'http://localhost/', 'name': 'Local'}),
+            content_type='application/json',
+            HTTP_X_CSRFTOKEN=client.cookies['csrftoken'].value,
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('error', response.json())
+        self.assertIn('not allowed', response.json()['error'])
 
     def test_post_missing_base_url_400(self):
         response = self.client.post(
@@ -61,6 +86,11 @@ class ApplicationDetailViewTest(TestCase):
     def setUp(self):
         self.client = Client()
 
+    def _csrf_client(self):
+        c = Client()
+        c.get('/dashboard/')
+        return c
+
     def test_get_detail_200(self):
         app = WatchedApplication.objects.create(name='X', base_url='https://x.com')
         response = self.client.get(f'/api/applications/{app.id}/')
@@ -74,11 +104,13 @@ class ApplicationDetailViewTest(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_patch_updates_app(self):
+        client = self._csrf_client()
         app = WatchedApplication.objects.create(name='X', base_url='https://x.com')
-        response = self.client.patch(
+        response = client.patch(
             f'/api/applications/{app.id}/',
             data=json.dumps({'name': 'Updated', 'is_active': False}),
             content_type='application/json',
+            HTTP_X_CSRFTOKEN=client.cookies['csrftoken'].value,
         )
         self.assertEqual(response.status_code, 200)
         app.refresh_from_db()
@@ -86,8 +118,12 @@ class ApplicationDetailViewTest(TestCase):
         self.assertFalse(app.is_active)
 
     def test_delete_204_and_removes_app(self):
+        client = self._csrf_client()
         app = WatchedApplication.objects.create(name='X', base_url='https://x.com')
-        response = self.client.delete(f'/api/applications/{app.id}/')
+        response = client.delete(
+            f'/api/applications/{app.id}/',
+            HTTP_X_CSRFTOKEN=client.cookies['csrftoken'].value,
+        )
         self.assertEqual(response.status_code, 204)
         self.assertFalse(WatchedApplication.objects.filter(pk=app.id).exists())
 

@@ -14,8 +14,9 @@ def mock_response(status_code=200):
 
 
 class RunCheckTest(TestCase):
+    @patch('monitor.checker._is_url_allowed', return_value=True)
     @patch('monitor.checker.requests.get')
-    def test_run_check_success_creates_result(self, mock_get):
+    def test_run_check_success_creates_result(self, mock_get, _mock_allowed):
         mock_get.return_value = mock_response(200)
         app = WatchedApplication.objects.create(base_url='https://example.com')
         result = run_check(app)
@@ -24,8 +25,9 @@ class RunCheckTest(TestCase):
         self.assertEqual(result.watched_application_id, app.id)
         mock_get.assert_called_once()
 
+    @patch('monitor.checker._is_url_allowed', return_value=True)
     @patch('monitor.checker.requests.get')
-    def test_run_check_failure_creates_result(self, mock_get):
+    def test_run_check_failure_creates_result(self, mock_get, _mock_allowed):
         mock_get.return_value = mock_response(404)
         app = WatchedApplication.objects.create(base_url='https://example.com')
         result = run_check(app)
@@ -33,14 +35,22 @@ class RunCheckTest(TestCase):
         self.assertEqual(result.status_code, 404)
         self.assertIn('404', result.error_message)
 
+    @patch('monitor.checker._is_url_allowed', return_value=True)
     @patch('monitor.checker.requests.get')
-    def test_run_check_exception_creates_failed_result(self, mock_get):
+    def test_run_check_exception_creates_failed_result(self, mock_get, _mock_allowed):
         mock_get.side_effect = Exception('Connection refused')
         app = WatchedApplication.objects.create(base_url='https://example.com')
         result = run_check(app)
         self.assertFalse(result.success)
         self.assertIsNone(result.status_code)
         self.assertIn('Connection refused', result.error_message)
+
+    def test_run_check_url_not_allowed_creates_failed_result(self):
+        app = WatchedApplication.objects.create(base_url='http://localhost/')
+        result = run_check(app)
+        self.assertFalse(result.success)
+        self.assertIsNone(result.status_code)
+        self.assertIn('not allowed', result.error_message)
 
 
 class EvaluateAlertsTest(TestCase):
